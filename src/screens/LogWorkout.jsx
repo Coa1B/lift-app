@@ -47,7 +47,7 @@ function NumericInput({ value, onCommit, className, allowDecimal = false, placeh
       inputMode={allowDecimal ? 'decimal' : 'numeric'}
       pattern={allowDecimal ? '[0-9.]*' : '[0-9]*'}
       placeholder={placeholder}
-      value={focused ? draft : toDraft(value)}
+      value={focused ? draft : String(value ?? 0)}
       onFocus={() => {
         setFocused(true);
         setDraft(toDraft(value));

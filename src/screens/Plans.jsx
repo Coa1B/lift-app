@@ -33,9 +33,19 @@ import { workoutFromPlan } from "../components/LogSheet";
 import {
   hydratePlans,
   loadPlansSync,
+  planSetTargets,
   savePlans,
 } from "../lib/plansStorage";
 import { loadDefaultRestSecs, formatRestLabel } from "../data/restPresets";
+import { useWeightUnit } from "../hooks/useWeightUnit";
+
+const DEFAULT_SET_COUNT = 3;
+
+let setIdCounter = 0;
+function newSet(weight = 0, reps = 0) {
+  setIdCounter += 1;
+  return { id: `ps-${Date.now()}-${setIdCounter}`, weight, reps };
+}
 
 function resolveExercises(plan) {
   return (plan.exercises || []).map((item) => {
@@ -54,8 +64,7 @@ function planToDraft(plan) {
     id: ex.exerciseId,
     name: ex.name,
     muscle: ex.muscle,
-    sets: ex.sets,
-    reps: ex.reps,
+    sets: planSetTargets(ex).map((t) => newSet(t.weight, t.reps)),
     restSecs: ex.restSecs > 0 ? ex.restSecs : fallbackRest,
   }));
 }
@@ -279,8 +288,7 @@ function PlanEditor({ plan, onClose, onSave }) {
         id: ex.id,
         name: ex.name,
         muscle: ex.muscle,
-        sets: 3,
-        reps: 8,
+        sets: Array.from({ length: DEFAULT_SET_COUNT }, () => newSet()),
         restSecs: loadDefaultRestSecs(),
       },
     ]);
@@ -314,8 +322,10 @@ function PlanEditor({ plan, onClose, onSave }) {
       restTimerSecs: plan?.restTimerSecs > 0 ? plan.restTimerSecs : fallbackRest,
       exercises: draft.map((d) => ({
         exerciseId: d.id,
-        sets: d.sets,
-        reps: d.reps,
+        // sets/reps kept alongside setTargets for older readers of the plan.
+        sets: d.sets.length,
+        reps: d.sets[0]?.reps ?? 0,
+        setTargets: d.sets.map(({ weight, reps }) => ({ weight, reps })),
         restSecs: d.restSecs > 0 ? d.restSecs : fallbackRest,
       })),
     });
@@ -471,6 +481,19 @@ function DraftCard({
   dragHandleProps,
   isDragging,
 }) {
+  const { fromLbs, toLbs, label: unitLabel } = useWeightUnit();
+
+  const updateSet = (setId, field, value) =>
+    onChange({
+      ...item,
+      sets: item.sets.map((s) => (s.id === setId ? { ...s, [field]: value } : s)),
+    });
+  const addSet = () => onChange({ ...item, sets: [...item.sets, newSet()] });
+  const removeSet = (setId) => {
+    if (item.sets.length <= 1) return;
+    onChange({ ...item, sets: item.sets.filter((s) => s.id !== setId) });
+  };
+
   return (
     <div
       className={`bg-bg-2 border rounded-card p-3.5 ${
@@ -510,17 +533,51 @@ function DraftCard({
         </button>
       </div>
 
+      <div className="rounded-lg border border-line overflow-hidden mb-3">
+        <div className="grid grid-cols-[32px_1fr_1fr_32px] gap-2 px-2.5 py-1.5 bg-bg-3 text-[10px] font-medium text-ink-3 uppercase tracking-wide">
+          <span>Set</span>
+          <span className="text-center">Weight ({unitLabel})</span>
+          <span className="text-center">Reps</span>
+          <span />
+        </div>
+        {item.sets.map((set, i) => (
+          <div
+            key={set.id}
+            className="grid grid-cols-[32px_1fr_1fr_32px] gap-2 px-2.5 py-2 border-t border-line items-center"
+          >
+            <span className="text-[13px] text-ink-3 font-medium">{i + 1}</span>
+            <Field
+              value={fromLbs(set.weight)}
+              allowDecimal
+              ariaLabel={`Set ${i + 1} weight`}
+              onChange={(v) => updateSet(set.id, "weight", toLbs(v))}
+            />
+            <Field
+              value={set.reps}
+              ariaLabel={`Set ${i + 1} reps`}
+              onChange={(v) => updateSet(set.id, "reps", v)}
+            />
+            <button
+              type="button"
+              onClick={() => removeSet(set.id)}
+              disabled={item.sets.length <= 1}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-ink-3 hover:text-red-400 disabled:opacity-30"
+              aria-label={`Remove set ${i + 1}`}
+            >
+              <X size={13} />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addSet}
+          className="w-full border-t border-line py-2 text-xs text-ink-2 flex items-center justify-center gap-1.5"
+        >
+          <Plus size={13} /> Add set
+        </button>
+      </div>
+
       <div className="grid grid-cols-3 gap-2">
-        <Field
-          label="Sets"
-          value={item.sets}
-          onChange={(v) => onChange({ ...item, sets: v })}
-        />
-        <Field
-          label="Reps"
-          value={item.reps}
-          onChange={(v) => onChange({ ...item, reps: v })}
-        />
         <Field
           label="Rest (s)"
           value={item.restSecs}
@@ -538,43 +595,51 @@ function DraftCard({
   );
 }
 
-function Field({ label, value, onChange, icon: Icon, hint }) {
-  const [draft, setDraft] = useState(() => (value === 0 || value == null ? "" : String(value)));
+function Field({ label, value, onChange, icon: Icon, hint, allowDecimal = false, ariaLabel }) {
+  // Editing starts from an empty box when the value is 0, but an untouched
+  // field always shows the number itself (0 included).
+  const toDraft = (v) => (v === 0 || v == null ? "" : String(v));
+  const [draft, setDraft] = useState(() => toDraft(value));
   const [focused, setFocused] = useState(false);
 
   useEffect(() => {
-    if (!focused) setDraft(value === 0 || value == null ? "" : String(value));
+    if (!focused) setDraft(toDraft(value));
   }, [value, focused]);
 
   const commit = (raw) => {
-    if (raw === "") {
+    if (raw === "" || raw === ".") {
       onChange(0);
       return;
     }
-    const n = parseInt(raw, 10);
+    const n = allowDecimal ? Number(raw) : parseInt(raw, 10);
     onChange(Number.isFinite(n) ? n : 0);
   };
 
   return (
     <div>
-      <div className="flex items-center gap-1 text-[10px] font-medium text-ink-3 uppercase tracking-wide mb-1">
-        {Icon && <Icon size={10} />}
-        {label}
-      </div>
+      {label && (
+        <div className="flex items-center gap-1 text-[10px] font-medium text-ink-3 uppercase tracking-wide mb-1">
+          {Icon && <Icon size={10} />}
+          {label}
+        </div>
+      )}
       <input
         type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
+        inputMode={allowDecimal ? "decimal" : "numeric"}
+        pattern={allowDecimal ? "[0-9.]*" : "[0-9]*"}
         placeholder="0"
-        value={focused ? draft : value === 0 || value == null ? "" : String(value)}
+        aria-label={ariaLabel ?? label}
+        value={focused ? draft : String(value ?? 0)}
         onFocus={() => {
           setFocused(true);
-          setDraft(value === 0 || value == null ? "" : String(value));
+          setDraft(toDraft(value));
         }}
         onChange={(e) => {
-          const raw = e.target.value.replace(/\D/g, "");
+          const raw = allowDecimal
+            ? e.target.value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1")
+            : e.target.value.replace(/\D/g, "");
           setDraft(raw);
-          if (raw !== "") commit(raw);
+          if (raw !== "" && raw !== ".") commit(raw);
         }}
         onBlur={() => {
           setFocused(false);

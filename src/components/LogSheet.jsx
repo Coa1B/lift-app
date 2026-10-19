@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { exerciseLibrary } from "../data/mockData";
 import { resolveRestSecs } from "../data/restPresets";
-import { loadPlansSync } from "../lib/plansStorage";
+import { loadPlansSync, planSetTargets } from "../lib/plansStorage";
 
 export function workoutFromPlan(plan) {
   return {
@@ -23,12 +23,12 @@ export function workoutFromPlan(plan) {
         equipment: ex?.equipment ?? "",
         prPace: false,
         defaultRestSecs: resolveRestSecs(item.restSecs || plan.restTimerSecs),
-        sets: Array.from({ length: Math.max(item.sets || 0, 1) }, (_, si) => ({
+        sets: planSetTargets(item).map((target, si) => ({
           id: `s-${i}-${si}-${Date.now()}`,
           prevWeight: null,
           prevReps: null,
-          weight: 0,
-          reps: 0,
+          weight: target.weight,
+          reps: target.reps,
           done: false,
         })),
         overloadSuggestion: null,
