@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   X,
   Timer,
-  Pencil,
   GripVertical,
 } from "lucide-react";
 import {
@@ -197,47 +196,147 @@ function EmptyState({ onCreate }) {
   );
 }
 
+const SWIPE_ACTION_WIDTH = 88;
+// Fraction of the card width past which letting go deletes outright.
+const SWIPE_DELETE_FRACTION = 0.6;
+
 function PlanCard({ plan, onStart, onEdit, onDelete }) {
   const exercises = resolveExercises(plan);
   const preview = exercises.slice(0, 4);
   const extra = exercises.length - preview.length;
 
+  const cardRef = useRef(null);
+  const gesture = useRef(null);
+  const suppressClick = useRef(false);
+  const [offset, setOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const open = offset !== 0 && !dragging;
+
+  const remove = () => {
+    if (removing) return;
+    setRemoving(true);
+    setOffset(-(cardRef.current?.offsetWidth ?? 400));
+    setTimeout(onDelete, 200);
+  };
+
+  const onPointerDown = (e) => {
+    if (removing || (e.pointerType === "mouse" && e.button !== 0)) return;
+    suppressClick.current = false;
+    gesture.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      base: offset,
+      axis: null,
+    };
+  };
+
+  const onPointerMove = (e) => {
+    const g = gesture.current;
+    if (!g || g.id !== e.pointerId) return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    if (!g.axis) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      g.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (g.axis === "y") {
+        gesture.current = null;
+        return;
+      }
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Pointer already released; the swipe still works without capture.
+      }
+      setDragging(true);
+    }
+    // Left only; resist a little when dragging right past the resting spot.
+    const next = g.base + dx;
+    setOffset(next > 0 ? next / 4 : next);
+  };
+
+  const onPointerEnd = (e) => {
+    const g = gesture.current;
+    gesture.current = null;
+    if (!g || g.id !== e.pointerId || g.axis !== "x") return;
+    suppressClick.current = true;
+    setDragging(false);
+    const width = cardRef.current?.offsetWidth ?? 400;
+    if (-offset > width * SWIPE_DELETE_FRACTION) {
+      remove();
+    } else if (-offset > SWIPE_ACTION_WIDTH / 2) {
+      setOffset(-SWIPE_ACTION_WIDTH);
+    } else {
+      setOffset(0);
+    }
+  };
+
+  const onCardClick = () => {
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
+    }
+    if (open) {
+      setOffset(0);
+      return;
+    }
+    onEdit();
+  };
+
   return (
-    <div className="bg-bg-2 border border-line rounded-card overflow-hidden">
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="min-w-0">
-            <div className="text-[15px] font-medium text-ink tracking-tight truncate">
-              {plan.name}
-            </div>
-            <div className="flex items-center gap-2 mt-1 text-xs text-ink-2">
-              <span className="flex items-center gap-1">
-                <Dumbbell size={12} /> {exercises.length} exercises
-              </span>
-              {plan.tag && (
-                <span className="text-accent bg-accent-soft border border-accent-border px-2 py-0.5 rounded-pill">
-                  {plan.tag}
-                </span>
-              )}
-            </div>
+    <div
+      ref={cardRef}
+      className={`relative rounded-card overflow-hidden transition-opacity duration-200 ${
+        removing ? "opacity-0" : ""
+      }`}
+    >
+      <button
+        type="button"
+        onClick={remove}
+        tabIndex={open ? 0 : -1}
+        className="absolute inset-y-0 right-0 bg-red-500 text-white flex flex-col items-center justify-center gap-1 text-xs font-medium rounded-r-card"
+        style={{ width: Math.max(SWIPE_ACTION_WIDTH, -offset) }}
+        aria-label={`Delete ${plan.name}`}
+      >
+        <Trash2 size={18} />
+        Delete
+      </button>
+
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`Edit ${plan.name}`}
+        onClick={onCardClick}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            onEdit();
+          }
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+        className="relative bg-bg-2 border border-line rounded-card p-4 cursor-pointer select-none touch-pan-y"
+        style={{
+          transform: `translateX(${offset}px)`,
+          transition: dragging ? "none" : "transform 200ms ease",
+        }}
+      >
+        <div className="min-w-0 mb-3">
+          <div className="text-[15px] font-medium text-ink tracking-tight truncate">
+            {plan.name}
           </div>
-          <div className="flex items-center shrink-0">
-            <button
-              type="button"
-              onClick={onEdit}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-ink-3 hover:text-accent"
-              aria-label="Edit plan"
-            >
-              <Pencil size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={onDelete}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-ink-3 hover:text-red-400"
-              aria-label="Delete plan"
-            >
-              <Trash2 size={15} />
-            </button>
+          <div className="flex items-center gap-2 mt-1 text-xs text-ink-2">
+            <span className="flex items-center gap-1">
+              <Dumbbell size={12} /> {exercises.length} exercises
+            </span>
+            {plan.tag && (
+              <span className="text-accent bg-accent-soft border border-accent-border px-2 py-0.5 rounded-pill">
+                {plan.tag}
+              </span>
+            )}
           </div>
         </div>
 
@@ -259,7 +358,18 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
 
         <button
           type="button"
-          onClick={onStart}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (suppressClick.current) {
+              suppressClick.current = false;
+              return;
+            }
+            if (open) {
+              setOffset(0);
+              return;
+            }
+            onStart();
+          }}
           className="w-full bg-accent text-bg rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-1.5"
         >
           <Play size={14} fill="currentColor" /> Start workout
