@@ -37,7 +37,7 @@ export default function Exercises() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search exercises..."
-          className="w-full bg-bg-2 border border-line rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+          className="w-full bg-bg-2 border border-transparent rounded-full pl-10 pr-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
         />
       </div>
 
@@ -46,10 +46,8 @@ export default function Exercises() {
           <button
             key={m}
             onClick={() => setActiveFilter(m)}
-            className={`shrink-0 px-3.5 py-1.5 rounded-pill border text-xs ${
-              activeFilter === m
-                ? 'bg-accent text-bg border-accent'
-                : 'border-line text-ink-2'
+            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs ${
+              activeFilter === m ? 'bg-accent text-bg' : 'bg-bg-2 text-ink-2'
             }`}
           >
             {m}
@@ -67,9 +65,9 @@ export default function Exercises() {
               <div
                 key={ex.id}
                 onClick={() => navigate(`/exercises/${ex.id}`)}
-                className="flex items-center gap-3 px-4 py-3 border-b border-line cursor-pointer active:bg-bg-2"
+                className="flex items-center gap-3 mx-2 px-2 py-3 rounded-2xl cursor-pointer active:bg-bg-2"
               >
-                <div className="w-10 h-10 rounded-[10px] bg-bg-3 flex items-center justify-center text-ink-2 shrink-0">
+                <div className="w-10 h-10 rounded-full bg-bg-2 flex items-center justify-center text-ink-2 shrink-0">
                   <Dumbbell size={20} />
                 </div>
                 <div>

@@ -196,26 +196,26 @@ export default function LogWorkout() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="shrink-0 bg-bg-2 border-b border-line px-4 pt-safe-lg pb-3">
+      <div className="shrink-0 bg-bg px-4 pt-safe-lg pb-2">
         <div className="flex items-center gap-2 mb-1">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="w-9 h-9 -ml-1 rounded-full flex items-center justify-center text-ink-2 shrink-0"
+            className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-ink-2 shrink-0 active:bg-bg-2"
             aria-label="Close workout"
           >
             <X size={20} />
           </button>
           <div className="flex-1 min-w-0">
-            <div className="text-lg font-medium text-ink tracking-tight truncate">
+            <div className="text-[22px] font-semibold text-ink tracking-tight truncate">
               {workout.title}
             </div>
           </div>
-          <span className="bg-accent text-bg text-xs font-medium px-2.5 py-1 rounded-pill shrink-0 tabular-nums">
+          <span className="bg-accent text-bg text-xs font-medium px-3 py-1.5 rounded-full shrink-0 tabular-nums">
             {fmtClock(elapsed)}
           </span>
         </div>
-        <div className="flex gap-3 text-xs text-ink-2 pl-8">
+        <div className="flex gap-3 text-xs text-ink-2 pl-8 -mt-0.5">
           <span className="flex items-center gap-1">
             <Dumbbell size={12} /> {workout.exercises.length} exercises
           </span>
@@ -225,8 +225,8 @@ export default function LogWorkout() {
         </div>
       </div>
 
-      <div className="shrink-0 mx-4 mt-3 mb-1">
-        <div className={`rounded-card border p-3.5 ${resting ? 'bg-accent-soft border-accent-border' : 'bg-bg-2 border-line'}`}>
+      <div className="shrink-0 mx-4 mt-2 mb-1">
+        <div className={`rounded-3xl p-4 transition-colors ${resting ? 'bg-accent-soft' : 'bg-bg-2'}`}>
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2 text-sm font-medium text-ink">
               <Timer size={16} className="text-accent" />
@@ -250,10 +250,8 @@ export default function LogWorkout() {
                   applyRestSecs(p.secs);
                   if (resting) startRest(p.secs);
                 }}
-                className={`text-xs h-8 px-3 rounded-pill border ${
-                  sessionRestSecs === p.secs
-                    ? 'bg-accent text-bg border-accent'
-                    : 'border-line text-ink-2'
+                className={`text-xs h-8 px-3 rounded-full ${
+                  sessionRestSecs === p.secs ? 'bg-accent text-bg' : 'bg-bg-3 text-ink-2'
                 }`}
               >
                 {p.label}
@@ -291,7 +289,7 @@ export default function LogWorkout() {
                   const n = applyRestSecs(restDraft === '' ? sessionRestSecs : restDraft);
                   if (resting) startRest(n);
                 }}
-                className="w-full bg-bg-3 border border-line rounded-lg text-ink text-sm font-medium px-3 py-2 text-center tabular-nums focus:outline-none focus:border-accent"
+                className="w-full bg-bg-3 border border-transparent rounded-full text-ink text-sm font-medium px-3 py-2 text-center tabular-nums focus:outline-none focus:border-accent"
               />
               <span className="text-xs text-ink-3 shrink-0">sec</span>
             </div>
@@ -301,7 +299,7 @@ export default function LogWorkout() {
             <button
               type="button"
               onClick={() => setRestRemaining(0)}
-              className="w-full bg-bg-3 border border-line rounded-xl py-2.5 text-sm text-ink-2"
+              className="w-full bg-bg-3 rounded-full py-2.5 text-sm text-ink-2"
             >
               Skip rest
             </button>
@@ -309,7 +307,7 @@ export default function LogWorkout() {
             <button
               type="button"
               onClick={() => startRest(sessionRestSecs)}
-              className="w-full bg-bg-3 border border-line rounded-xl py-2.5 text-sm font-medium text-ink flex items-center justify-center gap-2"
+              className="w-full bg-bg-3 rounded-full py-2.5 text-sm font-medium text-ink flex items-center justify-center gap-2"
             >
               <Timer size={14} className="text-accent" />
               Start {formatRestLabel(sessionRestSecs)} rest
@@ -336,10 +334,10 @@ export default function LogWorkout() {
             ))}
           </SortableContext>
         </DndContext>
-        <button className="mx-4 mt-2.5 bg-bg-2 border border-dashed border-line rounded-card p-3.5 flex items-center justify-center gap-2 text-ink-2 text-sm w-[calc(100%-32px)]">
+        <button className="mx-4 mt-8 bg-bg-2 rounded-full py-3.5 flex items-center justify-center gap-2 text-ink text-sm font-medium w-[calc(100%-32px)] active:bg-bg-3">
           <Plus size={16} /> Add exercise
         </button>
-        <button onClick={() => navigate('/')} className="mx-4 mt-3 mb-4 bg-accent text-bg rounded-2xl py-3.5 text-[15px] font-medium w-[calc(100%-32px)]">
+        <button onClick={() => navigate('/')} className="mx-4 mt-3 mb-6 bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium w-[calc(100%-32px)]">
           Finish workout
         </button>
       </div>
@@ -384,11 +382,11 @@ function ExerciseBlock({ exercise, onToggle, onUpdate, onDeleteSet, onAddSet, dr
   const { fromLbs, toLbs, format } = useWeightUnit();
 
   return (
-    <div className={`bg-bg-2 rounded-card mx-4 mt-2.5 overflow-hidden border ${isDragging ? 'border-accent shadow-lg' : 'border-line'}`}>
-      <div className="px-3 pt-3 pb-2.5 flex items-center gap-2">
+    <div className={`mx-4 mt-7 rounded-2xl transition-[background-color,box-shadow] ${isDragging ? 'bg-bg-2 shadow-2xl shadow-black/40 px-2 py-2' : ''}`}>
+      <div className="flex items-center gap-2 pb-2">
         <button
           type="button"
-          className="touch-none w-8 h-8 -ml-1 rounded-lg flex items-center justify-center text-ink-3 active:text-ink shrink-0 cursor-grab active:cursor-grabbing"
+          className="touch-none w-7 h-9 -ml-2 flex items-center justify-center text-ink-3 active:text-ink shrink-0 cursor-grab active:cursor-grabbing"
           aria-label="Drag to reorder"
           {...dragHandleProps}
         >
@@ -404,10 +402,10 @@ function ExerciseBlock({ exercise, onToggle, onUpdate, onDeleteSet, onAddSet, dr
           </div>
         </div>
         {exercise.prPace && (
-          <span className="text-[11px] text-accent bg-accent-soft px-2.5 py-1 rounded-pill border border-accent-border shrink-0">PR pace</span>
+          <span className="text-[11px] text-accent-text bg-accent-soft px-2.5 py-1 rounded-full shrink-0">PR pace</span>
         )}
       </div>
-      <div className="grid grid-cols-[24px_1fr_76px_68px_28px_28px] gap-1 px-4 py-1.5 bg-bg-3">
+      <div className="grid grid-cols-[24px_1fr_76px_68px_28px_28px] gap-1.5 px-1 pb-1.5">
         <span className="text-[10px] font-medium text-ink-3 uppercase tracking-wide">Set</span>
         <span className="text-[10px] font-medium text-ink-3 uppercase tracking-wide">Prev</span>
         <span className="text-[10px] font-medium text-ink-3 uppercase tracking-wide text-center">Weight</span>
@@ -416,22 +414,22 @@ function ExerciseBlock({ exercise, onToggle, onUpdate, onDeleteSet, onAddSet, dr
       </div>
       {exercise.sets.map((set, i) => (
         <div key={set.id}
-          className={`grid grid-cols-[24px_1fr_76px_68px_28px_28px] gap-1 px-4 py-2.5 border-t border-line items-center ${set.done ? 'bg-accent-soft' : ''}`}>
+          className={`grid grid-cols-[24px_1fr_76px_68px_28px_28px] gap-1.5 px-1 py-1 rounded-xl items-center transition-colors ${set.done ? 'bg-accent-soft' : ''}`}>
           <span className="text-[13px] text-ink-3 font-medium">{i + 1}</span>
           <span className="text-xs text-ink-3">{set.prevWeight != null ? `${format(set.prevWeight)}×${set.prevReps}` : '—'}</span>
           <NumericInput
             value={fromLbs(set.weight)}
             allowDecimal
             onCommit={(v) => onUpdate(exercise.id, set.id, 'weight', toLbs(v))}
-            className="bg-bg-3 border border-line rounded-lg text-ink text-sm font-medium px-1.5 py-1.5 w-full text-center focus:outline-none focus:border-accent placeholder:text-ink-3"
+            className="bg-bg-2 border border-transparent rounded-xl text-ink text-[15px] font-medium px-1.5 py-2 w-full text-center focus:outline-none focus:border-accent placeholder:text-ink-3"
           />
           <NumericInput
             value={set.reps ?? 0}
             onCommit={(v) => onUpdate(exercise.id, set.id, 'reps', v)}
-            className="bg-bg-3 border border-line rounded-lg text-ink text-sm font-medium px-1.5 py-1.5 w-full text-center focus:outline-none focus:border-accent placeholder:text-ink-3"
+            className="bg-bg-2 border border-transparent rounded-xl text-ink text-[15px] font-medium px-1.5 py-2 w-full text-center focus:outline-none focus:border-accent placeholder:text-ink-3"
           />
           <button onClick={() => onToggle(exercise.id, set.id, exercise.defaultRestSecs)}
-            className={`w-7 h-7 rounded-full border flex items-center justify-center ${set.done ? 'bg-accent border-accent text-bg' : 'border-line text-ink-3'}`}>
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${set.done ? 'bg-accent text-bg' : 'bg-bg-2 text-ink-3'}`}>
             <Check size={13} />
           </button>
           <button onClick={() => onDeleteSet(exercise.id, set.id)}
@@ -440,10 +438,10 @@ function ExerciseBlock({ exercise, onToggle, onUpdate, onDeleteSet, onAddSet, dr
           </button>
         </div>
       ))}
-      <div className="px-4 py-3">
+      <div className="pt-2">
         <button onClick={() => onAddSet(exercise.id)}
-          className="w-full bg-bg-3 border border-line text-ink-2 rounded-lg py-2 text-xs flex items-center justify-center gap-1.5">
-          <Plus size={13} /> Add set
+          className="h-9 px-3 -ml-1 rounded-full flex items-center gap-1.5 text-[13px] font-medium text-accent active:bg-bg-2">
+          <Plus size={14} /> Add set
         </button>
       </div>
     </div>
@@ -453,7 +451,7 @@ function ExerciseBlock({ exercise, onToggle, onUpdate, onDeleteSet, onAddSet, dr
 function OverloadTip({ suggestion }) {
   const { format } = useWeightUnit();
   return (
-    <div className="mx-4 mt-2 bg-accent-soft border border-accent-border rounded-xl px-3.5 py-2.5 flex gap-2.5 items-start">
+    <div className="mx-4 mt-2 bg-accent-soft rounded-2xl px-4 py-3 flex gap-2.5 items-start">
       <Sparkles size={16} className="text-accent mt-0.5 shrink-0" />
       <div className="text-xs text-accent-text leading-relaxed">
         <strong>Suggestion:</strong> You hit {format(suggestion.lastWeight)}×{suggestion.lastReps} last session.

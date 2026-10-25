@@ -126,7 +126,7 @@ export default function PRs() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {selected && selected.history.length > 0 && (
-          <div className="bg-bg-2 border border-line rounded-card p-4 mb-4">
+          <div className="bg-bg-2 rounded-3xl p-4 mb-7">
             <div className="flex items-center justify-between mb-1">
               <div className="text-[11px] font-medium text-ink-2 uppercase tracking-wide">
                 1RM progress · {selected.name}
@@ -184,7 +184,7 @@ export default function PRs() {
           </div>
         )}
 
-        <div className="text-[13px] font-medium text-ink-2 uppercase tracking-wide mb-2.5">
+        <div className="text-[15px] font-semibold text-ink tracking-tight mb-1 px-1">
           One-rep maxes
         </div>
 
@@ -208,13 +208,13 @@ export default function PRs() {
               key={pr.id}
               type="button"
               onClick={() => setSelectedId(pr.id)}
-              className={`w-full text-left bg-bg-2 rounded-card p-3.5 px-4 mb-2 border flex items-center justify-between ${
-                active ? "border-accent" : "border-line"
+              className={`text-left rounded-2xl py-3 px-3 -mx-2 w-[calc(100%+16px)] flex items-center justify-between transition-colors ${
+                active ? "bg-bg-2" : "active:bg-bg-2"
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
-                  className={`w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                     active
                       ? "bg-accent text-bg"
                       : "bg-bg-3 text-ink-2"
@@ -280,13 +280,13 @@ function AddPRModal({ onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-bg/80 backdrop-blur-sm px-4 pb-safe-sheet">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-bg/80 backdrop-blur-sm">
       <form
         onSubmit={submit}
-        className="bg-bg-2 border border-line rounded-2xl w-full max-w-sm p-5"
+        className="bg-bg-2 rounded-t-3xl w-full max-w-[480px] px-5 pt-5 pb-safe-sheet"
       >
         <div className="flex items-center justify-between mb-4">
-          <div className="text-sm font-medium text-ink">Add 1RM PR</div>
+          <div className="text-lg font-medium text-ink tracking-tight">Add 1RM PR</div>
           <button type="button" onClick={onClose} className="text-ink-2">
             <X size={18} />
           </button>
@@ -298,7 +298,7 @@ function AddPRModal({ onClose, onSave }) {
         <select
           value={exerciseId}
           onChange={(e) => setExerciseId(e.target.value)}
-          className="w-full mb-3 bg-bg-3 border border-line rounded-xl px-3 py-2.5 text-sm text-ink focus:outline-none focus:border-accent"
+          className="w-full mb-4 bg-bg-3 border border-transparent rounded-2xl px-4 py-3 text-sm text-ink focus:outline-none focus:border-accent"
         >
           {prExercises.map((ex) => (
             <option key={ex.id} value={ex.id}>
@@ -315,13 +315,13 @@ function AddPRModal({ onClose, onSave }) {
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           placeholder={labelLong === "kg" ? "100" : "225"}
-          className="w-full mb-4 bg-bg-3 border border-line rounded-xl px-3 py-2.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+          className="w-full mb-5 bg-bg-3 border border-transparent rounded-2xl px-4 py-3 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
         />
 
         <button
           type="submit"
           disabled={!weight || Number(weight) <= 0}
-          className="w-full bg-accent text-bg rounded-2xl py-3 text-sm font-medium disabled:opacity-50"
+          className="w-full bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium disabled:opacity-50"
         >
           Save PR
         </button>

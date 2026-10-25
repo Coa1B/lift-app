@@ -81,14 +81,14 @@ export default function LogSheet({ onClose }) {
       onClick={onClose}
     >
       <div
-        className="bg-bg-2 border border-line rounded-t-3xl w-full max-w-[480px] px-4 pt-3 pb-safe-sheet"
+        className="bg-bg-2 rounded-t-3xl w-full max-w-[480px] px-3 pt-3 pb-safe-sheet"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-3">
           <div className="w-10 h-1 rounded-full bg-bg-4" />
         </div>
 
-        <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center justify-between mb-2 px-2">
           <div>
             <div className="text-lg font-medium text-ink tracking-tight">Log</div>
             <div className="text-sm text-ink-2 mt-0.5">What do you want to log?</div>
@@ -102,15 +102,15 @@ export default function LogSheet({ onClose }) {
           </button>
         </div>
 
-        <div className="space-y-2.5">
+        <div>
           {options.map(({ key, title, subtitle, icon: Icon, onClick }) => (
             <button
               key={key}
               type="button"
               onClick={onClick}
-              className="w-full text-left bg-bg-3 border border-line rounded-card px-4 py-4 flex items-center gap-3.5 active:border-accent"
+              className="w-full text-left rounded-2xl px-2 py-3.5 flex items-center gap-3.5 border-t border-line/60 first:border-t-0 active:bg-bg-3 transition-colors"
             >
-              <div className="w-12 h-12 rounded-2xl bg-bg flex items-center justify-center text-accent shrink-0">
+              <div className="w-12 h-12 rounded-full bg-accent-soft flex items-center justify-center text-accent shrink-0">
                 <Icon size={22} />
               </div>
               <div className="flex-1 min-w-0">
@@ -137,21 +137,26 @@ export default function LogSheet({ onClose }) {
 function PlanPicker({ plans, onClose, onSelect }) {
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-bg/80 backdrop-blur-sm px-4 pb-safe-sheet"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-bg/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-bg-2 border border-line rounded-2xl w-full max-w-sm p-5 max-h-[70vh] flex flex-col"
+        className="bg-bg-2 rounded-t-3xl w-full max-w-[480px] px-3 pt-5 pb-safe-sheet max-h-[75vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-sm font-medium text-ink">Choose a plan</div>
-          <button type="button" onClick={onClose} className="text-ink-2">
-            <X size={18} />
+        <div className="flex items-center justify-between mb-2 px-2">
+          <div className="text-lg font-medium text-ink tracking-tight">Choose a plan</div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-bg-3 flex items-center justify-center text-ink-2"
+            aria-label="Close"
+          >
+            <X size={16} />
           </button>
         </div>
 
-        <div className="overflow-y-auto space-y-2">
+        <div className="overflow-y-auto">
           {plans.length === 0 && (
             <div className="text-sm text-ink-2 py-6 text-center">
               No saved plans yet. Create one first.
@@ -162,9 +167,9 @@ function PlanPicker({ plans, onClose, onSelect }) {
               key={plan.id}
               type="button"
               onClick={() => onSelect(plan)}
-              className="w-full text-left bg-bg-3 border border-line rounded-xl px-3.5 py-3"
+              className="w-full text-left rounded-2xl px-2 py-3.5 border-t border-line/60 first:border-t-0 active:bg-bg-3 transition-colors"
             >
-              <div className="text-sm font-medium text-ink">{plan.name}</div>
+              <div className="text-[15px] font-medium text-ink">{plan.name}</div>
               <div className="text-xs text-ink-2 mt-0.5">
                 {plan.exercises?.length ?? 0} exercises
                 {plan.tag ? ` · ${plan.tag}` : ""}

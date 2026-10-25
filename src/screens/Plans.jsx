@@ -975,7 +975,7 @@ function ExercisePicker({ selectedIds, onClose, onAdd }) {
                     {added ? (
                       <span className="text-[11px] text-ink-3">Added</span>
                     ) : (
-                      <span className="w-8 h-8 rounded-full bg-accent-soft border border-accent-border text-accent flex items-center justify-center">
+                      <span className="w-8 h-8 rounded-full bg-accent-soft text-accent flex items-center justify-center">
                         <Plus size={16} />
                       </span>
                     )}

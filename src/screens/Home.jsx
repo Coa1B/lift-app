@@ -43,9 +43,9 @@ export default function Home() {
           <button
             type="button"
             onClick={openLog}
-            className="w-full rounded-card bg-accent text-bg p-4 flex items-center gap-3.5 text-left active:scale-[0.99] transition-transform"
+            className="w-full rounded-3xl bg-accent text-bg p-4 flex items-center gap-3.5 text-left active:scale-[0.99] transition-transform"
           >
-            <span className="w-12 h-12 rounded-2xl bg-bg/15 flex items-center justify-center shrink-0">
+            <span className="w-12 h-12 rounded-full bg-bg/15 flex items-center justify-center shrink-0">
               <Play size={22} fill="currentColor" />
             </span>
             <span className="flex-1 min-w-0">
@@ -58,8 +58,8 @@ export default function Home() {
           </button>
         </section>
 
-        <section className="mb-5 rounded-card border border-line bg-bg-2 overflow-hidden">
-          <div className="px-4 py-3.5 flex items-center justify-between border-b border-line">
+        <section className="mb-7 rounded-3xl bg-bg-2 overflow-hidden">
+          <div className="px-5 pt-4 pb-2 flex items-center justify-between">
             <div>
               <div className="text-[11px] font-medium text-ink-3 uppercase tracking-wide">Streak</div>
               <div className="flex items-baseline gap-1.5 mt-0.5">
@@ -71,7 +71,7 @@ export default function Home() {
             </div>
             <Flame size={32} className="text-accent-border" />
           </div>
-          <div className="grid grid-cols-3 divide-x divide-line">
+          <div className="grid grid-cols-3 px-2 pb-2">
             <MiniStat value={weekStats.sessionsThisWeek} label="sessions" />
             <MiniStat value={formatVolume(weekStats.volumeThisWeekLbs)} label={labelLong} />
             <MiniStat value={weekStats.newPRsThisWeek} label="new PRs" accent />
@@ -79,8 +79,8 @@ export default function Home() {
         </section>
 
         <section>
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-[13px] font-medium text-ink-2 uppercase tracking-wide">
+          <div className="flex justify-between items-center mb-1 px-1">
+            <h2 className="text-[15px] font-semibold text-ink tracking-tight">
               Recent
             </h2>
             <button
@@ -94,11 +94,11 @@ export default function Home() {
           </div>
 
           {preview.length === 0 ? (
-            <div className="rounded-card border border-line bg-bg-2 px-4 py-8 text-center text-sm text-ink-2">
+            <div className="py-10 text-center text-sm text-ink-3">
               No workouts yet. Start one to build your history.
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="-mx-2">
               {preview.map((w, i) => (
                 <WorkoutCard
                   key={w.id}
@@ -134,9 +134,9 @@ function WorkoutCard({ workout, index, onClick, volumeLabel }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full text-left rounded-card border border-line bg-bg-2 p-3.5 flex gap-3 active:border-accent transition-colors"
+      className="w-full text-left rounded-2xl px-2 py-3.5 flex gap-3 border-t border-line/60 first:border-t-0 active:bg-bg-2 transition-colors"
     >
-      <div className="w-10 h-10 rounded-xl bg-bg-3 flex items-center justify-center text-ink-3 shrink-0 text-sm font-medium">
+      <div className="w-10 h-10 rounded-full bg-bg-2 flex items-center justify-center text-ink-3 shrink-0 text-[13px] font-medium">
         {String(index + 1).padStart(2, '0')}
       </div>
       <div className="flex-1 min-w-0">
@@ -157,7 +157,7 @@ function WorkoutCard({ workout, index, onClick, volumeLabel }) {
             </span>
           )}
         </div>
-        <div className="mt-2 text-[11px] text-ink-3 truncate">
+        <div className="mt-1 text-xs text-ink-3 truncate">
           {workout.exercises.map((ex) => ex.name).join(' · ')}
         </div>
       </div>

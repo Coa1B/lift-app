@@ -96,7 +96,7 @@ export default function Cardio() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         <div className="grid grid-cols-2 gap-2 mb-5">
-          <div className="bg-bg-2 border border-line rounded-card px-4 py-3">
+          <div className="bg-bg-2 rounded-3xl px-4 py-3.5">
             <div className="text-[11px] font-medium text-ink-3 uppercase tracking-wide">
               This week
             </div>
@@ -105,7 +105,7 @@ export default function Cardio() {
             </div>
             <div className="text-xs text-ink-2">sessions</div>
           </div>
-          <div className="bg-bg-2 border border-line rounded-card px-4 py-3">
+          <div className="bg-bg-2 rounded-3xl px-4 py-3.5">
             <div className="text-[11px] font-medium text-ink-3 uppercase tracking-wide">
               Duration
             </div>
@@ -116,7 +116,7 @@ export default function Cardio() {
           </div>
         </div>
 
-        <div className="text-[13px] font-medium text-ink-2 uppercase tracking-wide mb-2.5">
+        <div className="text-[15px] font-semibold text-ink tracking-tight mt-3 mb-2.5 px-1">
           Activities
         </div>
         <div className="grid grid-cols-2 gap-2 mb-6">
@@ -125,9 +125,9 @@ export default function Cardio() {
               key={type.id}
               type="button"
               onClick={() => setLogging(type)}
-              className="bg-bg-2 border border-line rounded-card p-3.5 text-left active:border-accent transition-colors"
+              className="bg-bg-2 rounded-3xl p-4 text-left active:bg-bg-3 transition-colors"
             >
-              <div className="w-9 h-9 rounded-[10px] bg-bg-3 flex items-center justify-center text-accent mb-2.5">
+              <div className="w-10 h-10 rounded-full bg-accent-soft flex items-center justify-center text-accent mb-2.5">
                 <HeartPulse size={18} />
               </div>
               <div className="text-sm font-medium text-ink">{type.name}</div>
@@ -138,11 +138,11 @@ export default function Cardio() {
           ))}
         </div>
 
-        <div className="text-[13px] font-medium text-ink-2 uppercase tracking-wide mb-2.5">
+        <div className="text-[15px] font-semibold text-ink tracking-tight mt-3 mb-2.5 px-1">
           Recent
         </div>
         {sessions.length === 0 ? (
-          <div className="rounded-card border border-line bg-bg-2 px-4 py-8 text-center text-sm text-ink-2">
+          <div className="py-10 text-center text-sm text-ink-3">
             No cardio logged yet. Pick an activity above.
           </div>
         ) : (
@@ -156,9 +156,9 @@ export default function Cardio() {
               return (
                 <div
                   key={session.id}
-                  className="bg-bg-2 border border-line rounded-card p-3.5 flex items-start gap-3"
+                  className="py-3.5 px-1 flex items-start gap-3 border-t border-line/60 first:border-t-0"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-bg-3 flex items-center justify-center text-accent shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-bg-2 flex items-center justify-center text-accent shrink-0">
                     <HeartPulse size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -257,7 +257,7 @@ function LogCardioSheet({ type: initialType, onClose, onSave }) {
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-bg-2 border border-line rounded-t-3xl w-full max-w-[480px] px-4 pt-3 pb-safe-sheet"
+        className="bg-bg-2 rounded-t-3xl w-full max-w-[480px] px-4 pt-3 pb-safe-sheet"
       >
         <div className="flex justify-center mb-3">
           <div className="w-10 h-1 rounded-full bg-bg-4" />
@@ -288,10 +288,10 @@ function LogCardioSheet({ type: initialType, onClose, onSave }) {
                 setType(t);
                 if (!t.tracksDistance) setDistance("");
               }}
-              className={`shrink-0 h-8 px-3 rounded-pill border text-xs ${
+              className={`shrink-0 h-8 px-3 rounded-full text-xs ${
                 t.id === type.id
-                  ? "bg-accent text-bg border-accent"
-                  : "border-line text-ink-2"
+                  ? "bg-accent text-bg"
+                  : "bg-bg-3 text-ink-2"
               }`}
             >
               {t.name}
@@ -309,7 +309,7 @@ function LogCardioSheet({ type: initialType, onClose, onSave }) {
           onChange={(e) => setDuration(e.target.value)}
           placeholder="30"
           autoFocus
-          className="w-full mb-3 bg-bg-3 border border-line rounded-xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+          className="w-full mb-3 bg-bg-3 border border-transparent rounded-2xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
         />
 
         {type.tracksDistance && (
@@ -323,7 +323,7 @@ function LogCardioSheet({ type: initialType, onClose, onSave }) {
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
               placeholder={type.distanceUnit === "mi" ? "3.1" : "2000"}
-              className="w-full mb-3 bg-bg-3 border border-line rounded-xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+              className="w-full mb-3 bg-bg-3 border border-transparent rounded-2xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
             />
           </>
         )}
@@ -337,7 +337,7 @@ function LogCardioSheet({ type: initialType, onClose, onSave }) {
           value={calories}
           onChange={(e) => setCalories(e.target.value)}
           placeholder="250"
-          className="w-full mb-3 bg-bg-3 border border-line rounded-xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+          className="w-full mb-3 bg-bg-3 border border-transparent rounded-2xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
         />
 
         <label className="block text-[11px] font-medium text-ink-3 uppercase tracking-wide mb-1.5">
@@ -348,13 +348,13 @@ function LogCardioSheet({ type: initialType, onClose, onSave }) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Easy pace, hills, etc."
           maxLength={120}
-          className="w-full mb-4 bg-bg-3 border border-line rounded-xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+          className="w-full mb-4 bg-bg-3 border border-transparent rounded-2xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
         />
 
         <button
           type="submit"
           disabled={!canSave}
-          className="w-full bg-accent text-bg rounded-2xl py-3.5 text-[15px] font-medium disabled:opacity-40"
+          className="w-full bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium disabled:opacity-40"
         >
           Save session
         </button>

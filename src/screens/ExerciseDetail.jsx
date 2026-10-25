@@ -28,21 +28,21 @@ export default function ExerciseDetail() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-4 pt-safe pb-3">
-        <button onClick={() => navigate(-1)} className="text-ink-2">
+      <div className="flex items-center gap-2 px-3 pt-safe pb-3">
+        <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full flex items-center justify-center text-ink-2 active:bg-bg-2" aria-label="Back">
           <ArrowLeft size={20} />
         </button>
         <div className="flex items-baseline gap-2">
           <span className="text-lg font-medium text-ink tracking-tight">{exercise.name}</span>
-          <span className="text-[11px] text-accent bg-accent-soft border border-accent-border px-2 py-0.5 rounded-pill">
+          <span className="text-[11px] text-accent-text bg-accent-soft px-2 py-0.5 rounded-full">
             {exercise.muscle}
           </span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <div className="grid grid-cols-2 gap-2.5 mb-4">
-          <div className="bg-bg-2 border border-line rounded-card p-3.5">
+        <div className="grid grid-cols-2 gap-2.5 mb-6">
+          <div className="bg-bg-2 rounded-3xl p-4">
             <div className="flex items-center gap-1.5 text-[11px] text-ink-2 font-medium uppercase tracking-wide mb-2">
               <Trophy size={13} /> Personal best
             </div>
@@ -58,7 +58,7 @@ export default function ExerciseDetail() {
             </div>
           </div>
 
-          <div className="bg-bg-2 border border-line rounded-card p-3.5">
+          <div className="bg-bg-2 rounded-3xl p-4">
             <div className="flex items-center gap-1.5 text-[11px] text-ink-2 font-medium uppercase tracking-wide mb-2">
               <TrendingUp size={13} /> Next target
             </div>
@@ -73,7 +73,7 @@ export default function ExerciseDetail() {
           </div>
         </div>
 
-        <div className="flex gap-5 border-b border-line mb-4">
+        <div className="inline-flex gap-1 p-1 bg-bg-2 rounded-full mb-4">
           <TabButton label="Progress chart" active={tab === 'chart'} onClick={() => setTab('chart')} />
           <TabButton label="History log" active={tab === 'history'} onClick={() => setTab('history')} />
         </div>
@@ -92,8 +92,8 @@ function TabButton({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`pb-2.5 text-sm font-medium border-b-2 -mb-px ${
-        active ? 'text-accent border-accent' : 'text-ink-2 border-transparent'
+      className={`h-8 px-4 rounded-full text-[13px] font-medium transition-colors ${
+        active ? 'bg-accent text-bg' : 'text-ink-2'
       }`}
     >
       {label}
@@ -110,7 +110,7 @@ function ProgressChart({ data }) {
   );
 
   return (
-    <div className="bg-bg-2 border border-line rounded-card p-4">
+    <div className="bg-bg-2 rounded-3xl p-4">
       <div className="text-[11px] font-medium text-ink-2 uppercase tracking-wide mb-3">
         Max weight per session ({labelLong})
       </div>
@@ -160,15 +160,15 @@ function ProgressChart({ data }) {
 function HistoryLog({ history }) {
   const { format } = useWeightUnit();
   return (
-    <div className="space-y-2.5">
+    <div>
       {history.map((session) => (
-        <div key={session.date} className="bg-bg-2 border border-line rounded-card p-3.5">
+        <div key={session.date} className="py-3.5 border-t border-line/60 first:border-t-0">
           <div className="text-sm font-medium text-ink mb-2">{session.date}</div>
           <div className="flex flex-wrap gap-1.5">
             {session.sets.map((set, i) => (
               <span
                 key={i}
-                className="text-xs bg-bg-3 border border-line text-ink-2 px-2.5 py-1 rounded-pill"
+                className="text-xs bg-bg-2 text-ink-2 px-2.5 py-1 rounded-full"
               >
                 {format(set.weight)} × {set.reps}
               </span>

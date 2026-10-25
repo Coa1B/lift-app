@@ -88,7 +88,7 @@ export default function Profile() {
           </button>
         </div>
 
-        <div className="mx-4 mb-4 bg-accent-soft border border-accent-border rounded-card p-4 flex items-center justify-between">
+        <div className="mx-4 mb-4 bg-accent-soft rounded-3xl p-5 flex items-center justify-between">
           <div>
             <div className="text-4xl font-medium text-accent tracking-tight">0</div>
             <div className="text-xs text-accent-text">week streak</div>
@@ -102,24 +102,24 @@ export default function Profile() {
           <MiniStat value={0} label="PRs set" />
         </div>
 
-        <div className="mx-4 mb-2 text-[10px] font-medium text-ink-3 uppercase tracking-wide">
+        <div className="mx-5 mt-3 mb-2 text-[15px] font-semibold text-ink tracking-tight">
           Settings
         </div>
-        <div className="mx-4 bg-bg-2 rounded-card overflow-hidden border border-line">
+        <div className="mx-4 bg-bg-2 rounded-3xl overflow-hidden">
           <button
             type="button"
             onClick={toggleUnit}
-            className="w-full flex items-center justify-between px-4 py-3.5 border-b border-line text-left"
+            className="w-full flex items-center justify-between px-4 py-3.5 border-b border-line/60 text-left"
           >
             <div className="flex items-center gap-2.5 text-sm text-ink">
               <Scale size={18} className="text-ink-2" />
               Weight unit
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-[13px] px-2.5 py-1 rounded-pill border ${unit === 'lbs' ? 'bg-accent text-bg border-accent' : 'border-line text-ink-2'}`}>
+              <span className={`text-[13px] px-2.5 py-1 rounded-full ${unit === 'lbs' ? 'bg-accent text-bg' : 'bg-bg-3 text-ink-2'}`}>
                 lbs
               </span>
-              <span className={`text-[13px] px-2.5 py-1 rounded-pill border ${unit === 'kg' ? 'bg-accent text-bg border-accent' : 'border-line text-ink-2'}`}>
+              <span className={`text-[13px] px-2.5 py-1 rounded-full ${unit === 'kg' ? 'bg-accent text-bg' : 'bg-bg-3 text-ink-2'}`}>
                 kg
               </span>
             </div>
@@ -127,7 +127,7 @@ export default function Profile() {
           <button
             type="button"
             onClick={() => setPickingRest(true)}
-            className="w-full flex items-center justify-between px-4 py-3.5 border-b border-line text-left"
+            className="w-full flex items-center justify-between px-4 py-3.5 border-b border-line/60 text-left"
           >
             <div className="flex items-center gap-2.5 text-sm text-ink">
               <Timer size={18} className="text-ink-2" />
@@ -148,14 +148,14 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => setTheme('dark')}
-                className={`text-[13px] px-2.5 py-1 rounded-pill border ${theme === 'dark' ? 'bg-accent text-bg border-accent' : 'border-line text-ink-2'}`}
+                className={`text-[13px] px-2.5 py-1 rounded-full ${theme === 'dark' ? 'bg-accent text-bg' : 'bg-bg-3 text-ink-2'}`}
               >
                 Dark
               </button>
               <button
                 type="button"
                 onClick={() => setTheme('light')}
-                className={`text-[13px] px-2.5 py-1 rounded-pill border ${theme === 'light' ? 'bg-accent text-bg border-accent' : 'border-line text-ink-2'}`}
+                className={`text-[13px] px-2.5 py-1 rounded-full ${theme === 'light' ? 'bg-accent text-bg' : 'bg-bg-3 text-ink-2'}`}
               >
                 Light
               </button>
@@ -166,7 +166,7 @@ export default function Profile() {
           Tap a setting to change it.
         </div>
 
-        <div className="mx-4 mb-6 bg-bg-2 rounded-card overflow-hidden border border-line">
+        <div className="mx-4 mb-6 bg-bg-2 rounded-3xl overflow-hidden">
           <button
             type="button"
             onClick={forceUpdate}
@@ -183,11 +183,11 @@ export default function Profile() {
 
       {editingName && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-bg/80 backdrop-blur-sm px-4 pb-safe-sheet"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-bg/80 backdrop-blur-sm"
           onClick={() => setEditingName(false)}
         >
           <div
-            className="bg-bg-2 border border-line rounded-2xl w-full max-w-sm p-5"
+            className="bg-bg-2 rounded-t-3xl w-full max-w-[480px] px-5 pt-5 pb-safe-sheet"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-sm font-medium text-ink mb-1">Your name</div>
@@ -200,13 +200,13 @@ export default function Profile() {
               placeholder="Your name"
               autoFocus
               maxLength={40}
-              className="w-full mb-4 bg-bg-3 border border-line rounded-xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+              className="w-full mb-4 bg-bg-3 border border-transparent rounded-2xl px-3.5 py-3 text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
             />
             <button
               type="button"
               onClick={saveName}
               disabled={!nameDraft.trim()}
-              className="w-full bg-accent text-bg rounded-xl py-3 text-sm font-medium disabled:opacity-40"
+              className="w-full bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium disabled:opacity-40"
             >
               Save
             </button>
@@ -216,11 +216,11 @@ export default function Profile() {
 
       {pickingRest && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-bg/80 backdrop-blur-sm px-4 pb-safe-sheet"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-bg/80 backdrop-blur-sm"
           onClick={() => setPickingRest(false)}
         >
           <div
-            className="bg-bg-2 border border-line rounded-2xl w-full max-w-sm p-5"
+            className="bg-bg-2 rounded-t-3xl w-full max-w-[480px] px-5 pt-5 pb-safe-sheet"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-sm font-medium text-ink mb-1">Default rest timer</div>
@@ -233,10 +233,10 @@ export default function Profile() {
                   key={p.secs}
                   type="button"
                   onClick={() => chooseRest(p.secs)}
-                  className={`h-9 px-3.5 rounded-pill border text-sm ${
+                  className={`h-9 px-3.5 rounded-full text-sm ${
                     restSecs === p.secs
-                      ? 'bg-accent text-bg border-accent'
-                      : 'border-line text-ink-2'
+                      ? 'bg-accent text-bg'
+                      : 'bg-bg-3 text-ink-2'
                   }`}
                 >
                   {p.label}
@@ -260,7 +260,7 @@ export default function Profile() {
                   if (!raw) return;
                   chooseRest(Math.max(1, Math.min(3600, parseInt(raw, 10))));
                 }}
-                className="flex-1 bg-bg-3 border border-line rounded-xl text-ink text-sm px-3 py-2.5 focus:outline-none focus:border-accent placeholder:text-ink-3"
+                className="flex-1 bg-bg-3 border border-transparent rounded-2xl text-ink text-sm px-3 py-2.5 focus:outline-none focus:border-accent placeholder:text-ink-3"
               />
               <button
                 type="button"
@@ -270,7 +270,7 @@ export default function Profile() {
                   if (!raw) return;
                   chooseRest(Math.max(1, Math.min(3600, parseInt(raw, 10))));
                 }}
-                className="h-10 px-4 rounded-xl bg-accent text-bg text-sm font-medium shrink-0"
+                className="h-10 px-4 rounded-full bg-accent text-bg text-sm font-medium shrink-0"
               >
                 Set
               </button>
@@ -284,7 +284,7 @@ export default function Profile() {
 
 function MiniStat({ value, label }) {
   return (
-    <div className="bg-bg-2 rounded-xl p-3 text-center border border-line">
+    <div className="bg-bg-2 rounded-2xl p-3 text-center">
       <div className="text-xl font-medium text-ink tracking-tight">{value}</div>
       <div className="text-[11px] text-ink-2 mt-0.5">{label}</div>
     </div>

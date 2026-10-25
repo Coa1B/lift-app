@@ -32,7 +32,7 @@ export default function OnboardingName() {
             placeholder="Your name"
             autoFocus
             maxLength={40}
-            className="w-full bg-bg-2 border border-line rounded-xl px-4 py-3.5 text-[17px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+            className="w-full bg-bg-2 border border-transparent rounded-2xl px-4 py-3.5 text-[17px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
           />
         </form>
       </div>
@@ -41,7 +41,7 @@ export default function OnboardingName() {
         type="button"
         disabled={!canContinue}
         onClick={submit}
-        className="w-full mb-4 bg-accent text-bg rounded-2xl py-3.5 text-[15px] font-medium disabled:opacity-40"
+        className="w-full mb-4 bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium disabled:opacity-40"
       >
         Continue
       </button>

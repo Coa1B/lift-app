@@ -32,7 +32,7 @@ function BottomNav({ onLog }) {
   ];
 
   return (
-    <nav className="flex shrink-0 bg-bg-2 border-t border-line pt-2.5 pb-safe">
+    <nav className="flex shrink-0 bg-bg/95 backdrop-blur border-t border-line/60 pt-2.5 pb-safe">
       <NavLink
         to="/"
         end
