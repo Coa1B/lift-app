@@ -23,12 +23,13 @@ export function workoutFromPlan(plan) {
         equipment: ex?.equipment ?? "",
         prPace: false,
         defaultRestSecs: resolveRestSecs(item.restSecs || plan.restTimerSecs),
-        sets: planSetTargets(item).map((target, si) => ({
+        // Plans set how many sets to do; every set starts at 0 to fill in live.
+        sets: planSetTargets(item).map((_, si) => ({
           id: `s-${i}-${si}-${Date.now()}`,
           prevWeight: null,
           prevReps: null,
-          weight: target.weight,
-          reps: target.reps,
+          weight: 0,
+          reps: 0,
           done: false,
         })),
         overloadSuggestion: null,

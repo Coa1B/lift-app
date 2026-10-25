@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Dumbbell } from "lucide-react";
-import { recentWorkouts } from "../data/mockData";
+import { useWorkouts } from "../hooks/useStoredData";
+import { toWorkoutCard } from "../lib/workoutsStorage";
 import { useOpenLog } from "../hooks/useOpenLog";
 import { useWeightUnit } from "../hooks/useWeightUnit";
 
@@ -8,6 +9,7 @@ export default function History() {
   const navigate = useNavigate();
   const openLog = useOpenLog();
   const { fromLbs, label } = useWeightUnit();
+  const recentWorkouts = useWorkouts().map(toWorkoutCard);
 
   return (
     <div className="flex flex-col h-full">

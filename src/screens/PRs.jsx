@@ -14,22 +14,14 @@ import TopNav from "../components/TopNav";
 import { exerciseLibrary, PR_EXERCISE_IDS } from "../data/mockData";
 import { useWeightUnit } from "../hooks/useWeightUnit";
 import { useChartColors } from "../hooks/useTheme";
-import { hydrateJSON, loadJSON, saveJSON } from "../lib/persist";
+import { hydrateJSON, saveJSON } from "../lib/persist";
+import { PRS_KEY as STORAGE_KEY, loadPRsSync, normalizePRs } from "../lib/prsStorage";
 
-const STORAGE_KEY = "userPRs_v6";
 
 const prExercises = exerciseLibrary.filter((ex) =>
   PR_EXERCISE_IDS.includes(ex.id),
 );
 
-function normalizePRs(list) {
-  if (!Array.isArray(list)) return [];
-  return list.filter((pr) => PR_EXERCISE_IDS.includes(pr.exerciseId));
-}
-
-function loadPRsSync() {
-  return normalizePRs(loadJSON(STORAGE_KEY, []));
-}
 
 export default function PRs() {
   const [searchParams, setSearchParams] = useSearchParams();

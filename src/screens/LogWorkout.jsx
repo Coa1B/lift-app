@@ -18,6 +18,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { addWorkout, workoutFromSession } from '../lib/workoutsStorage';
 import { useWeightUnit } from '../hooks/useWeightUnit';
 import { REST_PRESETS, resolveRestSecs, loadDefaultRestSecs, formatRestLabel } from '../data/restPresets';
 
@@ -189,6 +190,12 @@ export default function LogWorkout() {
     }));
   };
 
+  const finishWorkout = async () => {
+    const record = workoutFromSession(workout, elapsed);
+    if (record) await addWorkout(record);
+    navigate('/');
+  };
+
   const totalVolume = workout.exercises.reduce((sum, ex) =>
     sum + ex.sets.reduce((s, set) => s + (set.done ? (set.weight || 0) * (set.reps || 0) : 0), 0), 0);
 
@@ -337,7 +344,7 @@ export default function LogWorkout() {
         <button className="mx-4 mt-8 bg-bg-2 rounded-full py-3.5 flex items-center justify-center gap-2 text-ink text-sm font-medium w-[calc(100%-32px)] active:bg-bg-3">
           <Plus size={16} /> Add exercise
         </button>
-        <button onClick={() => navigate('/')} className="mx-4 mt-3 mb-6 bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium w-[calc(100%-32px)]">
+        <button onClick={finishWorkout} className="mx-4 mt-3 mb-6 bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium w-[calc(100%-32px)]">
           Finish workout
         </button>
       </div>
