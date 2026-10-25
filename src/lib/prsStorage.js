@@ -16,7 +16,17 @@ export async function hydratePRs() {
   return normalizePRs(await hydrateJSON(PRS_KEY, []));
 }
 
+// PR dates are stored as "Oct 25" with no year, which Safari can't parse on
+// its own. Assume the most recent year that doesn't put the date in the future.
 function parseDate(label) {
+  if (!label) return 0;
+  const now = new Date();
+  const thisYear = Date.parse(`${label}, ${now.getFullYear()}`);
+  if (!Number.isNaN(thisYear)) {
+    return thisYear > now.getTime() + 24 * 60 * 60 * 1000
+      ? Date.parse(`${label}, ${now.getFullYear() - 1}`)
+      : thisYear;
+  }
   const t = Date.parse(label);
   return Number.isNaN(t) ? 0 : t;
 }

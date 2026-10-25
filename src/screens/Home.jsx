@@ -1,4 +1,4 @@
-import { Plus, Clock, Dumbbell, Flame, Trophy, ChevronRight, Play } from 'lucide-react';
+import { Clock, Dumbbell, Flame, Trophy, ChevronRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOpenLog } from '../hooks/useOpenLog';
 import { useWeightUnit } from '../hooks/useWeightUnit';
@@ -54,20 +54,7 @@ export default function Home() {
             {firstName || (name ? name : 'Athlete')}
           </h1>
 
-          <button
-            type="button"
-            onClick={openLog}
-            className="w-full rounded-3xl bg-accent text-bg p-4 flex items-center gap-3.5 text-left active:scale-[0.99] transition-transform"
-          >
-            <span className="w-12 h-12 rounded-full bg-bg/15 flex items-center justify-center shrink-0">
-              <Play size={22} fill="currentColor" />
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-[17px] font-medium tracking-tight">Start workout</span>
-              <span className="block text-sm text-bg/65 mt-0.5">Log a plan or add a PR</span>
-            </span>
-            <Plus size={20} className="opacity-80 shrink-0" />
-          </button>
+          <StartWorkoutCard onStart={openLog} />
         </section>
 
         <QuickStart plans={plans} onStart={startPlan} onSeeAll={() => navigate('/plans')} />
@@ -118,6 +105,28 @@ export default function Home() {
   );
 }
 
+function StartWorkoutCard({ onStart }) {
+  return (
+    <button
+      type="button"
+      onClick={onStart}
+      className="group w-full rounded-3xl bg-bg-2 pl-5 pr-3 py-3 flex items-center gap-4 text-left active:bg-bg-3 transition-colors"
+    >
+      <span className="flex-1 min-w-0">
+        <span className="block text-[17px] font-medium text-ink tracking-tight">
+          Start a workout
+        </span>
+        <span className="block text-[13px] text-ink-2 mt-0.5 truncate">
+          Choose a plan or log a PR
+        </span>
+      </span>
+      <span className="w-14 h-14 rounded-full bg-accent text-bg flex items-center justify-center shrink-0 shadow-[0_6px_20px_-6px_rgb(var(--color-accent)/0.6)] group-active:scale-95 transition-transform">
+        <Play size={20} fill="currentColor" className="ml-0.5" />
+      </span>
+    </button>
+  );
+}
+
 function SectionHeader({ title, onSeeAll }) {
   return (
     <div className="flex justify-between items-center mb-1 px-1">
@@ -152,7 +161,7 @@ function QuickStart({ plans, onStart, onSeeAll }) {
           </button>
         </EmptyLine>
       ) : (
-        <div className="flex gap-2.5 overflow-x-auto -mx-4 px-4 pb-1 pt-1 snap-x">
+        <div className="flex gap-2.5 overflow-x-auto -mx-4 px-4 scroll-px-4 pb-1 pt-1 snap-x">
           {plans.map((plan) => {
             const exercises = plan.exercises?.length ?? 0;
             const sets = (plan.exercises || []).reduce(
@@ -225,9 +234,9 @@ function WeeklyProgress({ week }) {
             const pct = d.volumeLbs > 0 ? Math.max(8, (d.volumeLbs / max) * 100) : 0;
             return (
               <div key={i} className="flex flex-col items-center gap-1.5 h-full justify-end">
-                <div className="w-full flex-1 flex items-end">
+                <div className="w-full flex-1 flex items-end justify-center">
                   <div
-                    className={`w-full rounded-full transition-[height] duration-500 ${
+                    className={`w-full max-w-[16px] rounded-full transition-[height] duration-500 ${
                       d.volumeLbs > 0 ? 'bg-accent' : 'bg-bg-3'
                     }`}
                     style={{ height: d.volumeLbs > 0 ? `${pct}%` : '6px' }}
