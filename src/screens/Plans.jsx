@@ -35,7 +35,7 @@ import {
   planSetTargets,
   savePlans,
 } from "../lib/plansStorage";
-import { loadDefaultRestSecs, formatRestLabel } from "../data/restPresets";
+import { loadDefaultRestSecs } from "../data/restPresets";
 import { useWeightUnit } from "../hooks/useWeightUnit";
 
 const DEFAULT_SET_COUNT = 3;
@@ -135,6 +135,24 @@ export default function Plans() {
     setEditorPlan(null);
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+  );
+
+  const reorderPlans = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+    dirtyRef.current = true;
+    setSavedPlans((plans) => {
+      const from = plans.findIndex((p) => p.id === active.id);
+      const to = plans.findIndex((p) => p.id === over.id);
+      if (from < 0 || to < 0) return plans;
+      const next = arrayMove(plans, from, to);
+      savePlans(next);
+      return next;
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       <TopNav
@@ -144,21 +162,38 @@ export default function Plans() {
         onAction={() => setEditorPlan("new")}
       />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 overflow-y-auto pb-6">
         {savedPlans.length === 0 ? (
           <EmptyState onCreate={() => setEditorPlan("new")} />
         ) : (
-          <div className="space-y-3">
-            {savedPlans.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                onStart={() => startPlan(plan)}
-                onEdit={() => setEditorPlan(plan)}
-                onDelete={() => deletePlan(plan.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="px-5 pb-2 text-xs text-ink-3">
+              Drag <GripVertical size={11} className="inline -mt-0.5" /> to
+              reorder · swipe left to delete
+            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={reorderPlans}
+            >
+              <SortableContext
+                items={savedPlans.map((p) => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className="px-2">
+                  {savedPlans.map((plan) => (
+                    <SortablePlanRow
+                      key={plan.id}
+                      plan={plan}
+                      onStart={() => startPlan(plan)}
+                      onEdit={() => setEditorPlan(plan)}
+                      onDelete={() => deletePlan(plan.id)}
+                    />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
+          </>
         )}
       </div>
 
@@ -176,7 +211,7 @@ export default function Plans() {
 function EmptyState({ onCreate }) {
   return (
     <div className="h-full min-h-[50vh] flex flex-col items-center justify-center text-center px-6">
-      <div className="w-14 h-14 rounded-2xl bg-bg-2 border border-line flex items-center justify-center text-accent mb-4">
+      <div className="w-14 h-14 rounded-full bg-accent-soft flex items-center justify-center text-accent mb-4">
         <Dumbbell size={24} />
       </div>
       <div className="text-lg font-medium text-ink tracking-tight mb-1">
@@ -197,15 +232,47 @@ function EmptyState({ onCreate }) {
 }
 
 const SWIPE_ACTION_WIDTH = 88;
-// Fraction of the card width past which letting go deletes outright.
+// Fraction of the row width past which letting go deletes outright.
 const SWIPE_DELETE_FRACTION = 0.6;
 
-function PlanCard({ plan, onStart, onEdit, onDelete }) {
-  const exercises = resolveExercises(plan);
-  const preview = exercises.slice(0, 4);
-  const extra = exercises.length - preview.length;
+function SortablePlanRow(props) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.plan.id });
 
-  const cardRef = useRef(null);
+  return (
+    <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 20 : undefined,
+        position: "relative",
+      }}
+      className="border-t border-line/60 first:border-t-0"
+    >
+      <PlanRow
+        {...props}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </li>
+  );
+}
+
+function PlanRow({ plan, onStart, onEdit, onDelete, dragHandleProps, isDragging }) {
+  const exercises = resolveExercises(plan);
+  const totalSets = (plan.exercises || []).reduce(
+    (sum, item) => sum + planSetTargets(item).length,
+    0,
+  );
+
+  const rowRef = useRef(null);
   const gesture = useRef(null);
   const suppressClick = useRef(false);
   const [offset, setOffset] = useState(0);
@@ -216,7 +283,7 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
   const remove = () => {
     if (removing) return;
     setRemoving(true);
-    setOffset(-(cardRef.current?.offsetWidth ?? 400));
+    setOffset(-(rowRef.current?.offsetWidth ?? 400));
     setTimeout(onDelete, 200);
   };
 
@@ -262,7 +329,7 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
     if (!g || g.id !== e.pointerId || g.axis !== "x") return;
     suppressClick.current = true;
     setDragging(false);
-    const width = cardRef.current?.offsetWidth ?? 400;
+    const width = rowRef.current?.offsetWidth ?? 400;
     if (-offset > width * SWIPE_DELETE_FRACTION) {
       remove();
     } else if (-offset > SWIPE_ACTION_WIDTH / 2) {
@@ -272,22 +339,23 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
     }
   };
 
-  const onCardClick = () => {
+  // Returns true when the tap was used up closing the swipe or ending a drag.
+  const consumeTap = () => {
     if (suppressClick.current) {
       suppressClick.current = false;
-      return;
+      return true;
     }
     if (open) {
       setOffset(0);
-      return;
+      return true;
     }
-    onEdit();
+    return false;
   };
 
   return (
     <div
-      ref={cardRef}
-      className={`relative rounded-card overflow-hidden transition-opacity duration-200 ${
+      ref={rowRef}
+      className={`relative overflow-hidden rounded-2xl transition-opacity duration-200 ${
         removing ? "opacity-0" : ""
       }`}
     >
@@ -295,8 +363,8 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
         type="button"
         onClick={remove}
         tabIndex={open ? 0 : -1}
-        className="absolute inset-y-0 right-0 bg-red-500 text-white flex flex-col items-center justify-center gap-1 text-xs font-medium rounded-r-card"
-        style={{ width: Math.max(SWIPE_ACTION_WIDTH, -offset) }}
+        className="absolute inset-y-1.5 right-1 bg-red-500 text-white flex flex-col items-center justify-center gap-1 text-xs font-medium rounded-2xl"
+        style={{ width: Math.max(SWIPE_ACTION_WIDTH, -offset) - 4 }}
         aria-label={`Delete ${plan.name}`}
       >
         <Trash2 size={18} />
@@ -307,7 +375,9 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
         role="button"
         tabIndex={0}
         aria-label={`Edit ${plan.name}`}
-        onClick={onCardClick}
+        onClick={() => {
+          if (!consumeTap()) onEdit();
+        }}
         onKeyDown={(e) => {
           if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
             e.preventDefault();
@@ -318,41 +388,48 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
-        className="relative bg-bg-2 border border-line rounded-card p-4 cursor-pointer select-none touch-pan-y"
+        className={`relative flex items-center gap-1 pl-1 pr-3 py-3.5 rounded-2xl cursor-pointer select-none touch-pan-y transition-[background-color,box-shadow] ${
+          isDragging ? "bg-bg-2 shadow-2xl shadow-black/40" : "bg-bg active:bg-bg-2"
+        }`}
         style={{
           transform: `translateX(${offset}px)`,
           transition: dragging ? "none" : "transform 200ms ease",
         }}
       >
-        <div className="min-w-0 mb-3">
-          <div className="text-[15px] font-medium text-ink tracking-tight truncate">
-            {plan.name}
-          </div>
-          <div className="flex items-center gap-2 mt-1 text-xs text-ink-2">
-            <span className="flex items-center gap-1">
-              <Dumbbell size={12} /> {exercises.length} exercises
-            </span>
+        <button
+          type="button"
+          {...dragHandleProps}
+          onPointerDown={(e) => {
+            dragHandleProps?.onPointerDown?.(e);
+            e.stopPropagation();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="touch-none self-stretch w-9 flex items-center justify-center text-ink-3 active:text-ink cursor-grab active:cursor-grabbing shrink-0"
+          aria-label={`Reorder ${plan.name}`}
+        >
+          <GripVertical size={18} />
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <div className="text-[16px] font-medium text-ink tracking-tight truncate">
+              {plan.name}
+            </div>
             {plan.tag && (
-              <span className="text-accent bg-accent-soft border border-accent-border px-2 py-0.5 rounded-pill">
+              <span className="text-[10px] text-accent-text bg-accent-soft px-2 py-0.5 rounded-pill shrink-0">
                 {plan.tag}
               </span>
             )}
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {preview.map((ex, i) => (
-            <span
-              key={`${ex.exerciseId}-${i}`}
-              className="text-[11px] px-2.5 py-1 rounded-pill border border-line bg-bg-3 text-ink-2"
-            >
-              {ex.name}
-            </span>
-          ))}
-          {extra > 0 && (
-            <span className="text-[11px] px-2.5 py-1 rounded-pill border border-line bg-bg-3 text-ink-3">
-              +{extra} more
-            </span>
+          <div className="text-xs text-ink-2 mt-0.5">
+            {exercises.length} {exercises.length === 1 ? "exercise" : "exercises"}
+            {" · "}
+            {totalSets} {totalSets === 1 ? "set" : "sets"}
+          </div>
+          {exercises.length > 0 && (
+            <div className="text-xs text-ink-3 mt-1 truncate">
+              {exercises.map((ex) => ex.name).join(" · ")}
+            </div>
           )}
         </div>
 
@@ -360,19 +437,12 @@ function PlanCard({ plan, onStart, onEdit, onDelete }) {
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            if (suppressClick.current) {
-              suppressClick.current = false;
-              return;
-            }
-            if (open) {
-              setOffset(0);
-              return;
-            }
-            onStart();
+            if (!consumeTap()) onStart();
           }}
-          className="w-full bg-accent text-bg rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-1.5"
+          className="w-11 h-11 rounded-full bg-accent text-bg flex items-center justify-center shrink-0 ml-2 active:scale-95 transition-transform"
+          aria-label={`Start ${plan.name}`}
         >
-          <Play size={14} fill="currentColor" /> Start workout
+          <Play size={16} fill="currentColor" className="ml-0.5" />
         </button>
       </div>
     </div>
@@ -441,55 +511,58 @@ function PlanEditor({ plan, onClose, onSave }) {
     });
   };
 
+  const totalSets = draft.reduce((sum, d) => sum + d.sets.length, 0);
+
   return (
     <div className="absolute inset-0 z-40 bg-bg flex flex-col">
-      <div className="flex items-center justify-between px-4 pt-safe pb-3 border-b border-line">
+      <div className="flex items-center justify-between px-3 pt-safe pb-1">
         <button
           type="button"
           onClick={onClose}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-ink-2"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-ink-2 active:bg-bg-2"
+          aria-label="Back"
         >
           <ArrowLeft size={20} />
         </button>
-        <div className="text-[15px] font-medium text-ink">
+        <div className="text-[13px] text-ink-2">
           {isEditing ? "Edit plan" : "New plan"}
         </div>
         <button
           type="button"
           onClick={handleSave}
           disabled={!canSave}
-          className="text-[13px] font-medium text-accent disabled:text-ink-3 px-1"
+          className="h-10 px-3 rounded-full text-[14px] font-medium text-accent disabled:text-ink-3"
         >
           Save
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        <label className="block text-[11px] font-medium text-ink-3 uppercase tracking-wide mb-1.5">
-          Plan name
-        </label>
+      <div className="flex-1 overflow-y-auto px-5 pb-8">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Push Day A"
+          placeholder="Plan name"
+          aria-label="Plan name"
           autoFocus={!isEditing}
-          className="w-full mb-5 bg-bg-2 border border-line rounded-xl px-3.5 py-3 text-[15px] text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+          className="w-full bg-transparent text-[28px] font-semibold tracking-tight text-ink placeholder:text-ink-3 focus:outline-none pt-2"
         />
-
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="text-[13px] font-medium text-ink-2 uppercase tracking-wide">
-            Exercises
-          </div>
-          <span className="text-xs text-ink-3">{draft.length}</span>
+        <div className="text-xs text-ink-3 mt-1 mb-7">
+          {draft.length} {draft.length === 1 ? "exercise" : "exercises"} ·{" "}
+          {totalSets} {totalSets === 1 ? "set" : "sets"}
         </div>
 
         {draft.length === 0 ? (
-          <div className="bg-bg-2 border border-dashed border-line rounded-card px-4 py-8 text-center mb-3">
-            <div className="text-sm text-ink-2 mb-3">No exercises yet</div>
+          <div className="flex flex-col items-center text-center py-10">
+            <div className="w-12 h-12 rounded-full bg-bg-2 flex items-center justify-center text-ink-3 mb-3">
+              <Dumbbell size={20} />
+            </div>
+            <div className="text-sm text-ink-2 mb-4">
+              Add the exercises for this plan.
+            </div>
             <button
               type="button"
               onClick={() => setPicking(true)}
-              className="inline-flex items-center gap-1.5 text-sm text-accent font-medium"
+              className="inline-flex items-center gap-1.5 bg-accent text-bg rounded-full px-5 py-2.5 text-sm font-medium"
             >
               <Plus size={16} /> Add exercise
             </button>
@@ -504,7 +577,7 @@ function PlanEditor({ plan, onClose, onSave }) {
               items={draft.map((d) => d.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="space-y-2.5 mb-3">
+              <div className="space-y-8">
                 {draft.map((item, index) => (
                   <SortableDraftCard
                     key={item.id}
@@ -523,19 +596,19 @@ function PlanEditor({ plan, onClose, onSave }) {
           <button
             type="button"
             onClick={() => setPicking(true)}
-            className="w-full bg-bg-2 border border-dashed border-line rounded-card py-3.5 flex items-center justify-center gap-2 text-sm text-ink-2"
+            className="mt-8 w-full bg-bg-2 rounded-full py-3.5 flex items-center justify-center gap-2 text-sm font-medium text-ink active:bg-bg-3"
           >
             <Plus size={16} /> Add exercise
           </button>
         )}
       </div>
 
-      <div className="px-4 pb-safe pt-3 border-t border-line">
+      <div className="px-5 pb-safe pt-2 bg-gradient-to-t from-bg via-bg to-transparent">
         <button
           type="button"
           onClick={handleSave}
           disabled={!canSave}
-          className="w-full bg-accent text-bg rounded-2xl py-3.5 text-[15px] font-medium disabled:opacity-40"
+          className="w-full bg-accent text-bg rounded-full py-3.5 text-[15px] font-medium disabled:opacity-40"
         >
           {isEditing ? "Save changes" : "Save plan"}
         </button>
@@ -606,100 +679,108 @@ function DraftCard({
 
   return (
     <div
-      className={`bg-bg-2 border rounded-card p-3.5 ${
-        isDragging ? "border-accent shadow-lg" : "border-line"
+      className={`rounded-2xl transition-[background-color,box-shadow] ${
+        isDragging ? "bg-bg-2 shadow-2xl shadow-black/40 p-3 -m-3" : ""
       }`}
     >
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex items-start gap-1 min-w-0 flex-1">
-          <button
-            type="button"
-            className="touch-none w-8 h-8 -ml-1 rounded-lg flex items-center justify-center text-ink-3 active:text-ink shrink-0 cursor-grab active:cursor-grabbing"
-            aria-label="Drag to reorder"
-            {...dragHandleProps}
-          >
-            <GripVertical size={16} />
-          </button>
-          <div className="min-w-0 pt-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-ink-3 font-medium w-4">
-                {index + 1}
-              </span>
-              <div className="text-sm font-medium text-ink truncate">
-                {item.name}
-              </div>
-            </div>
-            {item.muscle && (
-              <div className="text-xs text-ink-2 mt-0.5 ml-6">{item.muscle}</div>
-            )}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="touch-none w-7 h-9 -ml-2 flex items-center justify-center text-ink-3 active:text-ink shrink-0 cursor-grab active:cursor-grabbing"
+          aria-label="Drag to reorder"
+          {...dragHandleProps}
+        >
+          <GripVertical size={16} />
+        </button>
+        <span className="w-6 h-6 rounded-full bg-accent-soft text-accent-text text-[11px] font-semibold flex items-center justify-center shrink-0">
+          {index + 1}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="text-[15px] font-medium text-ink truncate">
+            {item.name}
           </div>
+          {item.muscle && (
+            <div className="text-xs text-ink-3">{item.muscle}</div>
+          )}
         </div>
         <button
           type="button"
           onClick={onRemove}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-ink-3 hover:text-red-400 shrink-0"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-ink-3 hover:text-red-400 active:bg-bg-2 shrink-0"
+          aria-label={`Remove ${item.name}`}
         >
-          <Trash2 size={14} />
+          <Trash2 size={15} />
         </button>
       </div>
 
-      <div className="rounded-lg border border-line overflow-hidden mb-3">
-        <div className="grid grid-cols-[32px_1fr_1fr_32px] gap-2 px-2.5 py-1.5 bg-bg-3 text-[10px] font-medium text-ink-3 uppercase tracking-wide">
-          <span>Set</span>
-          <span className="text-center">Weight ({unitLabel})</span>
+      <div className="mt-3 pl-1">
+        <div className="grid grid-cols-[28px_1fr_14px_1fr_32px] gap-2 px-0.5 pb-1.5 text-[10px] font-medium text-ink-3 uppercase tracking-wide">
+          <span className="text-center">Set</span>
+          <span className="text-center">{unitLabel}</span>
+          <span />
           <span className="text-center">Reps</span>
           <span />
         </div>
-        {item.sets.map((set, i) => (
-          <div
-            key={set.id}
-            className="grid grid-cols-[32px_1fr_1fr_32px] gap-2 px-2.5 py-2 border-t border-line items-center"
-          >
-            <span className="text-[13px] text-ink-3 font-medium">{i + 1}</span>
-            <Field
-              value={fromLbs(set.weight)}
-              allowDecimal
-              ariaLabel={`Set ${i + 1} weight`}
-              onChange={(v) => updateSet(set.id, "weight", toLbs(v))}
-            />
-            <Field
-              value={set.reps}
-              ariaLabel={`Set ${i + 1} reps`}
-              onChange={(v) => updateSet(set.id, "reps", v)}
-            />
-            <button
-              type="button"
-              onClick={() => removeSet(set.id)}
-              disabled={item.sets.length <= 1}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-ink-3 hover:text-red-400 disabled:opacity-30"
-              aria-label={`Remove set ${i + 1}`}
+        <div className="space-y-1.5">
+          {item.sets.map((set, i) => (
+            <div
+              key={set.id}
+              className="grid grid-cols-[28px_1fr_14px_1fr_32px] gap-2 items-center"
             >
-              <X size={13} />
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addSet}
-          className="w-full border-t border-line py-2 text-xs text-ink-2 flex items-center justify-center gap-1.5"
-        >
-          <Plus size={13} /> Add set
-        </button>
-      </div>
+              <span className="text-[13px] text-ink-3 font-medium text-center">
+                {i + 1}
+              </span>
+              <Field
+                value={fromLbs(set.weight)}
+                allowDecimal
+                ariaLabel={`Set ${i + 1} weight`}
+                onChange={(v) => updateSet(set.id, "weight", toLbs(v))}
+              />
+              <span className="text-ink-3 text-sm text-center">×</span>
+              <Field
+                value={set.reps}
+                ariaLabel={`Set ${i + 1} reps`}
+                onChange={(v) => updateSet(set.id, "reps", v)}
+              />
+              <button
+                type="button"
+                onClick={() => removeSet(set.id)}
+                disabled={item.sets.length <= 1}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-ink-3 hover:text-red-400 disabled:opacity-0"
+                aria-label={`Remove set ${i + 1}`}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <Field
-          label="Rest (s)"
-          value={item.restSecs}
-          onChange={(v) =>
-            onChange({
-              ...item,
-              restSecs: v > 0 ? v : loadDefaultRestSecs(),
-            })
-          }
-          icon={Timer}
-          hint={`between sets · ${formatRestLabel(item.restSecs || loadDefaultRestSecs())}`}
-        />
+        <div className="flex items-center justify-between mt-3">
+          <button
+            type="button"
+            onClick={addSet}
+            className="h-9 px-3 -ml-1 rounded-full flex items-center gap-1.5 text-[13px] font-medium text-accent active:bg-bg-2"
+          >
+            <Plus size={14} /> Add set
+          </button>
+          <div className="flex items-center gap-2 text-xs text-ink-2">
+            <Timer size={13} className="text-ink-3" />
+            Rest
+            <div className="w-16">
+              <Field
+                value={item.restSecs}
+                ariaLabel="Rest between sets, in seconds"
+                onChange={(v) =>
+                  onChange({
+                    ...item,
+                    restSecs: v > 0 ? v : loadDefaultRestSecs(),
+                  })
+                }
+              />
+            </div>
+            sec
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -755,7 +836,7 @@ function Field({ label, value, onChange, icon: Icon, hint, allowDecimal = false,
           setFocused(false);
           commit(draft);
         }}
-        className="w-full bg-bg-3 border border-line rounded-lg text-ink text-sm font-medium px-2 py-2 text-center focus:outline-none focus:border-accent placeholder:text-ink-3"
+        className="w-full bg-bg-2 border border-transparent rounded-xl text-ink text-[15px] font-medium px-2 py-2 text-center focus:outline-none focus:border-accent placeholder:text-ink-3"
       />
       {hint && (
         <div className="text-[10px] text-ink-3 mt-1 text-center">{hint}</div>
@@ -816,7 +897,7 @@ function ExercisePicker({ selectedIds, onClose, onAdd }) {
 
   return (
     <div className="absolute inset-0 z-50 bg-bg/80 backdrop-blur-sm flex items-end">
-      <div className="bg-bg-2 border-t border-line rounded-t-3xl w-full h-[92%] flex flex-col">
+      <div className="bg-bg-2 rounded-t-3xl w-full h-[92%] flex flex-col">
         <div className="flex justify-center pt-3 pb-2 shrink-0">
           <div className="w-10 h-1 rounded-full bg-bg-4" />
         </div>
@@ -841,7 +922,7 @@ function ExercisePicker({ selectedIds, onClose, onAdd }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search exercises..."
-            className="w-full bg-bg-3 border border-line rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
+            className="w-full bg-bg-3 border border-transparent rounded-full pl-10 pr-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-accent"
           />
         </div>
 
@@ -851,10 +932,8 @@ function ExercisePicker({ selectedIds, onClose, onAdd }) {
               key={m}
               type="button"
               onClick={() => setFilter(m)}
-              className={`shrink-0 h-8 px-3.5 rounded-pill border text-xs leading-none flex items-center ${
-                filter === m
-                  ? "bg-accent text-bg border-accent"
-                  : "border-line text-ink-2"
+              className={`shrink-0 h-8 px-3.5 rounded-pill text-xs leading-none flex items-center ${
+                filter === m ? "bg-accent text-bg" : "bg-bg-3 text-ink-2"
               }`}
             >
               {m}
