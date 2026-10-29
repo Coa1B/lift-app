@@ -162,6 +162,7 @@ export const exerciseLibrary = [
   { id: "biceps-curl", name: "Biceps Curl", muscle: "Biceps", equipment: "Dumbbell", type: "Isolation" },
   { id: "biceps-preacher", name: "Preacher Curl", muscle: "Biceps", equipment: "Machine", type: "Isolation" },
   { id: "biceps-hammer", name: "Hammer Curl", muscle: "Biceps", equipment: "Dumbbell", type: "Isolation" },
+  { id: "biceps-hammer-machine", name: "Hammer Curl (Machine)", muscle: "Biceps", equipment: "Machine", type: "Isolation" },
   { id: "biceps-reverse", name: "Reverse Curl", muscle: "Biceps", equipment: "Barbell", type: "Isolation" },
   { id: "forearms-wrist-curl", name: "Wrist Curl", muscle: "Biceps", equipment: "Barbell", type: "Isolation", region: "Forearms" },
   { id: "forearms-reverse-wrist", name: "Reverse Wrist Curl", muscle: "Biceps", equipment: "Barbell", type: "Isolation", region: "Forearms" },
